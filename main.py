@@ -12,7 +12,6 @@ import boto3
 from dotenv import load_dotenv
 from functools import partial
 from itertools import repeat
-from ec2_metadata import ec2_metadata
 
 load_dotenv()
 
@@ -290,8 +289,3 @@ if __name__ == '__main__':
 
     with multiprocessing.Pool(len(chunks)) as p:
         p.starmap(process_product_sku, zip(chunks, repeat(headers, disabled_skus)))
-    
-    ec2 = cemaco_session.resource('ec2')
-    ec2.terminate_instances(
-        InstanceIds=[ec2_metadata.instance_id]
-    )

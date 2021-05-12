@@ -284,7 +284,7 @@ if __name__ == '__main__':
 
     chunks = [array_sku[x : x + int(len(array_sku) / 200)] for x in range(0, len(array_sku), int(len(array_sku) / 200))]
 
-    with multiprocessing.Pool(processes=len(chunks)) as p:
+    with multiprocessing.Pool(processes=100) as p:
         p.starmap(process_product_sku, zip(chunks, repeat(headers), repeat(disabled_skus)))
 
     iid = ec2_metadata.instance_id

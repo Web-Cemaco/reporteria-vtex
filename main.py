@@ -12,10 +12,9 @@ import boto3
 from dotenv import load_dotenv
 from functools import partial
 from itertools import repeat
+from ec2_metadata import ec2_metadata
 
 load_dotenv()
-
-
 
 """
 Llena la tabla de categorias
@@ -210,9 +209,6 @@ if __name__ == '__main__':
 
     url_productos = "https://cemacogt.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitids?page=1&pagesize=1000000"
 
-    """
-    Llena la tabla de categorias
-    """
     categories_response = requests.get(
         url = url_categories,
         headers = headers
@@ -288,5 +284,9 @@ if __name__ == '__main__':
 
     chunks = [array_sku[x : x + int(len(array_sku) / 200)] for x in range(0, len(array_sku), int(len(array_sku) / 200))]
 
-    with multiprocessing.Pool(len(chunks)) as p:
-        p.starmap(process_product_sku, zip(chunks, repeat(headers, disabled_skus)))
+    with multiprocessing.Pool(processes=len(chunks)) as p:
+        p.starmap(process_product_sku, zip(chunks, repeat(headers), repeat(disabled_skus)))
+
+    iid = ec2_metadata.instance_id
+    ec2 = cemaco_session.client('ec2')
+    ec2.terminate_instances(InstanceIds=[iid])

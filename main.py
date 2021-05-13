@@ -95,37 +95,42 @@ def getProductsSkus(from_value, to_value):
 Proceso que obtiene SKUs en grupos
 """
 def process_product_sku(SkuProductList, RequestHeaders, DisabledSkus):
-    querys = []
-    for item in SkuProductList:
-        query_result = readApi.getBasicSKUData(item['SKU'], item['ProductId'], RequestHeaders, DisabledSkus)
-        querys.append(query_result)
-    
-    reintentar = True
-    cantidad_reintentos = 0
-    while reintentar:
-        try:
-            connection = psycopg2.connect(
-                user=os.environ.get('POSTGRES_USER'), 
-                password=os.environ.get('POSTGRES_PASS'), 
-                host=os.environ.get('POSTGRES_HOST'), 
-                port=os.environ.get('POSTGRES_PORT'), 
-                database=os.environ.get('POSTGRES_DB')
-            )
-            cursor = connection.cursor()
-            for query in querys:
-                try:
-                    cursor.execute(query)
-                    connection.commit()
-                except (Exception, psycopg2.Error) as error:
-                    connection.rollback()
-        except:
-            print("Error insertando informacion en el thread " + str(os.getpid()))
-            time.sleep(60)
-            reintentar = cantidad_reintentos < 3
-        finally:
-            if connection:
-                cursor.close()
-                connection.close()
+    try:
+        querys = []
+        for item in SkuProductList:
+            try:
+                query_result = readApi.getBasicSKUData(item['SKU'], item['ProductId'], RequestHeaders, DisabledSkus)
+                if len(query_result) > 0:
+                    querys.append(query_result)
+            except: print("Hubo un error")
+        
+        reintentar = True
+        cantidad_reintentos = 0
+        while reintentar:
+            try:
+                connection = psycopg2.connect(
+                    user=os.environ.get('POSTGRES_USER'), 
+                    password=os.environ.get('POSTGRES_PASS'), 
+                    host=os.environ.get('POSTGRES_HOST'), 
+                    port=os.environ.get('POSTGRES_PORT'), 
+                    database=os.environ.get('POSTGRES_DB')
+                )
+                cursor = connection.cursor()
+                for query in querys:
+                    try:
+                        cursor.execute(query)
+                        connection.commit()
+                    except (Exception, psycopg2.Error) as error:
+                        connection.rollback()
+            except:
+                print("Error insertando informacion en el thread " + str(os.getpid()))
+                time.sleep(60)
+                reintentar = cantidad_reintentos < 3
+            finally:
+                if connection:
+                    cursor.close()
+                    connection.close()
+    except: print("Hubo un error")
 
 if __name__ == '__main__':
 

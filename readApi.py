@@ -57,7 +57,7 @@ def getBasicSKUData(sku, pid, headers, catData):
                 category_id = str(product_json["CategoryId"])
                 department_id = str(product_json["DepartmentId"])
                 brand_id = str(product_json["BrandId"])
-                product_url = 'https://beta.cemaco.com/' + product_json["LinkId"] + '/p'
+                product_url = 'https://cemaco.com/' + product_json["LinkId"] + '/p'
                 product_url_request = requests.get(
                     url=product_url
                 )

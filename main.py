@@ -3,6 +3,7 @@ import json
 import threading
 import time
 import readApi
+import ec2Stop
 import psycopg2
 import os
 import multiprocessing
@@ -135,6 +136,8 @@ def process_product_sku(SkuProductList, RequestHeaders, DisabledSkus):
 if __name__ == '__main__':
 
     multiprocessing.freeze_support()
+    terminate_process = multiprocessing.Process(target=ec2Stop.shutdown_4hours)
+    terminate_process.start()
     #ELIMINAR LOS DATOS ACTUALES DE LA BASE DE DATOS 
     print('Limpiando la bd')
     connection = psycopg2.connect(
@@ -299,3 +302,5 @@ if __name__ == '__main__':
     iid = ec2_metadata.instance_id
     ec2 = cemaco_session.client('ec2')
     ec2.terminate_instances(InstanceIds=[iid])
+
+    terminate_process.join()

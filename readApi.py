@@ -123,11 +123,11 @@ def getBasicSKUData(sku, pid, headers, catData):
             else: raise Exception("Error")
 
             for spec in sku_values_insert:
-                skuatr_table += "INSERT INTO skuAttributes(sku, field_id, field_name, value_id, value_text) VALUES(" + str(sku) + "," + str(spec["FieldId"]) + ",'" + spec["FieldName"] + "'," + str(spec["ValueId"]) + ",'" + spec["Value"] + "');"
+                skuatr_table += "INSERT INTO skuAttributes(sku, field_id, field_name, value_id, value_text) VALUES(" + str(sku) + "," + str(spec["FieldId"]) + ",'" + spec["FieldName"] + "'," + str(spec["ValueId"]) + ",'" + repr(spec["Value"]) + "');"
             for pv in product_values_insert:
-                productatr_table += "INSERT INTO productAttribute(product_id, field_id, sku, field_name, field_value) VALUES (" + str(pid) + "," + str(pv["FieldId"]) + (",") + str(sku) + ",'" + pv["FieldName"] + "','" + pv["Value"] + "');"
+                productatr_table += "INSERT INTO productAttribute(product_id, field_id, sku, field_name, field_value) VALUES (" + str(pid) + "," + str(pv["FieldId"]) + (",") + str(sku) + ",'" + pv["FieldName"] + "','" + repr(pv["Value"]) + "');"
             for img in sku_images:
-                skuimage_table += "INSERT INTO skuImage(sku, file_id, image_url) VALUES (" + str(sku) + "," + str(img["FileId"]) + ",'" + img["ImageUrl"] + "');"
+                skuimage_table += "INSERT INTO skuImage(sku, file_id, image_url) VALUES (" + str(sku) + "," + str(img["FileId"]) + ",'" + repr(img["ImageUrl"]) + "');"
 
             is_disabled = sku in catData
 

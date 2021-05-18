@@ -63,7 +63,7 @@ def getBasicSKUData(sku, pid, headers, catData):
                     url=product_url
                 )
                 if product_url_request.status_code >= 500: raise Exception("Error")
-                return_data.Url = {
+                return_data['Url'] = {
                     'ProductUrl': product_url,
                     'Sku': sku,
                     'ProductId': pid,
@@ -128,13 +128,13 @@ def getBasicSKUData(sku, pid, headers, catData):
                     })
             else: raise Exception("Error")
 
-            return_data.SkuAttributes = sku_values_insert
-            return_data.ProductValues = product_values_insert
-            return_data.SkuImages = sku_images
+            return_data['SkuAttributes'] = sku_values_insert
+            return_data['ProductValues'] = product_values_insert
+            return_data['SkuImages'] = sku_images
 
             is_disabled = sku in catData
 
-            return_data.SkuInfo = {
+            return_data['SkuInfo'] = {
                 'Sku': sku,
                 'ProductId': pid,
                 'SkuName': sku_name,
@@ -147,10 +147,11 @@ def getBasicSKUData(sku, pid, headers, catData):
                 'Disabled': is_disabled
             }
 
-            return_data.ConError = False
+            return_data['ConError'] = False
 
             return return_data
-        except:
+        except Exception as error:
+            print(error)
             print("Reintentando el sku" + str(sku) + ", reintento " + str(cantidad_reintentos))
             cantidad_reintentos = cantidad_reintentos + 1
             time.sleep(60)

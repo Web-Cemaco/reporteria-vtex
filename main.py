@@ -118,34 +118,35 @@ def process_product_sku(SkuProductList, RequestHeaders, DisabledSkus):
                 )
                 cursor = connection.cursor()
                 for sku in sku_info:
-                    try:
-                        # Guarda la informacion del SKU
-                        actual_sku_info = sku['SkuInfo']
-                        sku_query = 'INSERT INTO sku(sku, product_id, sku_name, category_id, department_id, brand_id, is_active, has_price, inventory, disabled) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-                        cursor.execute(sku_query, (actual_sku_info['Sku'], actual_sku_info['ProductId'], actual_sku_info['SkuName'], actual_sku_info['CategoryId'], actual_sku_info['DepartmentId'], actual_sku_info['BrandId'], actual_sku_info['IsActive'], actual_sku_info['HasPrice'], actual_sku_info['Inventory'], actual_sku_info['Disabled']))
+                    if not sku['ConError']:
+                        try:
+                            # Guarda la informacion del SKU
+                            actual_sku_info = sku['SkuInfo']
+                            sku_query = 'INSERT INTO sku(sku, product_id, sku_name, category_id, department_id, brand_id, is_active, has_price, inventory, disabled) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                            cursor.execute(sku_query, (actual_sku_info['Sku'], actual_sku_info['ProductId'], actual_sku_info['SkuName'], actual_sku_info['CategoryId'], actual_sku_info['DepartmentId'], actual_sku_info['BrandId'], actual_sku_info['IsActive'], actual_sku_info['HasPrice'], actual_sku_info['Inventory'], actual_sku_info['Disabled']))
 
-                        # Guarda la informacion del Link
-                        actual_sku_url = sku['Url']
-                        sku_url_query = 'INSERT INTO productUrlStatus(product_id, sku, url, statusCode) VALUES (%s, %s, %s, %s)'
-                        cursor.execute(sku_url_query, (actual_sku_url['ProductId'], actual_sku_url['Sku'], actual_sku_url['ProductUrl'], actual_sku_url['StatusCode']))
+                            # Guarda la informacion del Link
+                            actual_sku_url = sku['Url']
+                            sku_url_query = 'INSERT INTO productUrlStatus(product_id, sku, url, statusCode) VALUES (%s, %s, %s, %s)'
+                            cursor.execute(sku_url_query, (actual_sku_url['ProductId'], actual_sku_url['Sku'], actual_sku_url['ProductUrl'], actual_sku_url['StatusCode']))
 
-                        # Guarda las imagenes del SKU
-                        for imagen in sku['SkuImages']:
-                            imagen_query = 'INSERT INTO skuImage(sku, file_id, image_url) VALUES (%s, %s, %s)'
-                            cursor.execute(imagen_query, (actual_sku_info['Sku'], imagen['FileId'], imagen['ImageUrl']))
+                            # Guarda las imagenes del SKU
+                            for imagen in sku['SkuImages']:
+                                imagen_query = 'INSERT INTO skuImage(sku, file_id, image_url) VALUES (%s, %s, %s)'
+                                cursor.execute(imagen_query, (actual_sku_info['Sku'], imagen['FileId'], imagen['ImageUrl']))
 
-                        # Guarda las especificaciones del producto
-                        for especificacion in sku['ProductValues']:
-                            specification_query = 'INSERT INTO productAttribute(product_id, field_id, sku, field_name, field_value) VALUES (%s, %s, %s, %s, %s)'
-                            cursor.execute(specification_query, (actual_sku_info['ProductId'], especificacion['FieldId'], actual_sku_info['Sku'], especificacion['FieldName'], especificacion['Value']))
+                            # Guarda las especificaciones del producto
+                            for especificacion in sku['ProductValues']:
+                                specification_query = 'INSERT INTO productAttribute(product_id, field_id, sku, field_name, field_value) VALUES (%s, %s, %s, %s, %s)'
+                                cursor.execute(specification_query, (actual_sku_info['ProductId'], especificacion['FieldId'], actual_sku_info['Sku'], especificacion['FieldName'], especificacion['Value']))
 
-                        # Guarda las especificaciones de un SKU
-                        for especificacion in sku['SkuAttributes']:
-                            specification_query = 'INSERT INTO skuAttributes(sku, field_id, field_name, value_id, value_text) VALUES (%s, %s, %s, %s, %s)'
-                            cursor.execute(specification_query, (actual_sku_info['Sku'], especificacion['FieldId'], especificacion['FieldName'], especificacion['ValueId'], especificacion['Value']))
-                        connection.commit()
-                    except (Exception, psycopg2.Error) as error:
-                        connection.rollback()
+                            # Guarda las especificaciones de un SKU
+                            for especificacion in sku['SkuAttributes']:
+                                specification_query = 'INSERT INTO skuAttributes(sku, field_id, field_name, value_id, value_text) VALUES (%s, %s, %s, %s, %s)'
+                                cursor.execute(specification_query, (actual_sku_info['Sku'], especificacion['FieldId'], especificacion['FieldName'], especificacion['ValueId'], especificacion['Value']))
+                            connection.commit()
+                        except (Exception, psycopg2.Error) as error:
+                            connection.rollback()
             except:
                 print("Error insertando informacion en el thread " + str(os.getpid()))
                 time.sleep(60)
@@ -230,6 +231,7 @@ if __name__ == '__main__':
     )
     total_json = total_request.json()
     total_prod = total_json["range"]['total']
+    total_prod = 1000
     continuar = True
     array_sku = []
     products_array = []

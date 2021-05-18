@@ -44,6 +44,7 @@ def getBasicSKUData(sku, pid, headers, catData):
         304 # Flags Check
     ]
     cantidad_reintentos = 0
+    return_data = {}
     while reintentar:
         reintentar = False
         try:
@@ -62,7 +63,12 @@ def getBasicSKUData(sku, pid, headers, catData):
                     url=product_url
                 )
                 if product_url_request.status_code >= 500: raise Exception("Error")
-                skuurl_table = "INSERT INTO productUrlStatus(product_id, sku, url, statusCode) VALUES (" + str(pid) + "," + str(sku) + ",'" + product_url + "'," + str(product_url_request.status_code) + ");"
+                return_data.Url = {
+                    'ProductUrl': product_url,
+                    'Sku': sku,
+                    'ProductId': pid,
+                    'StatusCode': product_url_request.status_code
+                }
             else: raise Exception("Error")
 
             #Obtener precios del SKU
@@ -122,21 +128,33 @@ def getBasicSKUData(sku, pid, headers, catData):
                     })
             else: raise Exception("Error")
 
-            for spec in sku_values_insert:
-                skuatr_table += "INSERT INTO skuAttributes(sku, field_id, field_name, value_id, value_text) VALUES(" + str(sku) + "," + str(spec["FieldId"]) + ",'" + spec["FieldName"] + "'," + str(spec["ValueId"]) + ",'" + repr(spec["Value"]) + "');"
-            for pv in product_values_insert:
-                productatr_table += "INSERT INTO productAttribute(product_id, field_id, sku, field_name, field_value) VALUES (" + str(pid) + "," + str(pv["FieldId"]) + (",") + str(sku) + ",'" + pv["FieldName"] + "','" + repr(pv["Value"]) + "');"
-            for img in sku_images:
-                skuimage_table += "INSERT INTO skuImage(sku, file_id, image_url) VALUES (" + str(sku) + "," + str(img["FileId"]) + ",'" + repr(img["ImageUrl"]) + "');"
+            return_data.SkuAttributes = sku_values_insert
+            return_data.ProductValues = product_values_insert
+            return_data.SkuImages = sku_images
 
             is_disabled = sku in catData
 
-            sku_table += "INSERT INTO sku(sku, product_id, sku_name, category_id, department_id, brand_id, is_active, has_price, inventory, disabled) VALUES(" + str(sku) + "," + str(pid) + ",'" + sku_name + "'," + str(category_id) + "," + str(department_id) + "," + str(brand_id) + ",'" + str(is_active) + "'," + str(has_price) + "," + str(total_inventory) + "," + str(is_disabled) + ");"
+            return_data.SkuInfo = {
+                'Sku': sku,
+                'ProductId': pid,
+                'SkuName': sku_name,
+                'CategoryId': category_id,
+                'DepartmentId': department_id,
+                'BrandId': brand_id,
+                'IsActive': is_active,
+                'HasPrice': has_price,
+                'Inventory': total_inventory,
+                'Disabled': is_disabled
+            }
 
-            return sku_table + productatr_table + skuatr_table + skuimage_table + skuurl_table
+            return_data.ConError = False
+
+            return return_data
         except:
             print("Reintentando el sku" + str(sku) + ", reintento " + str(cantidad_reintentos))
             cantidad_reintentos = cantidad_reintentos + 1
             time.sleep(60)
-            reintentar = cantidad_reintentos <= 10
-        return ""
+            reintentar = cantidad_reintentos <= 4
+        return {
+            'ConError': True
+        }

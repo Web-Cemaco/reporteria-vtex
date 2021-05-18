@@ -313,7 +313,7 @@ if __name__ == '__main__':
     print("Existen " + str(len(array_sku)) + " SKUs")
     print("Existen " + str(len(disabled_skus)) + " deshabilitados")
 
-    chunks = [array_sku[x : x + int(len(array_sku) / 100)] for x in range(0, len(array_sku), int(len(array_sku) / 100))]
+    chunks = [array_sku[x : x + int(len(array_sku) / 200)] for x in range(0, len(array_sku), int(len(array_sku) / 200))]
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
         future_product_sku = {

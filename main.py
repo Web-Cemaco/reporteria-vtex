@@ -231,7 +231,6 @@ if __name__ == '__main__':
     )
     total_json = total_request.json()
     total_prod = total_json["range"]['total']
-    total_prod = 1000
     continuar = True
     array_sku = []
     products_array = []

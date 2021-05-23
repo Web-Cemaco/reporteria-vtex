@@ -7,7 +7,7 @@ from ec2_metadata import ec2_metadata
 load_dotenv()
 
 def shutdown_4hours():
-    time.sleep(int(os.environ.get('TERMINATE_TIME')))
+    time.sleep(float(os.environ.get('TERMINATE_TIME')))
     boto3_instance = boto3.Session(
         aws_access_key_id=os.environ.get('AWS_ACCESS'),
         aws_secret_access_key=os.environ.get('AWS_SECRET'),

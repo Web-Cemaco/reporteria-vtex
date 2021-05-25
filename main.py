@@ -24,13 +24,13 @@ def getCategories():
     categories_table = "INSERT INTO categories (id_cat, level, level_1) VALUES (0, 0, 'Categorias');"
     id_cat = 0
     nivel = 0
-    nivel1= ""
-    nivel2= ""
-    nivel3= ""
     cats_file = open("categories.csv", 'r', encoding="utf-8")
     continuar_lectura = True
 
     while continuar_lectura:
+        nivel1= ""
+        nivel2= ""
+        nivel3= ""
         line = cats_file.readline()
         items = line.split("|")
         if len(items) > 1:

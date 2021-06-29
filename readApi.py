@@ -154,9 +154,9 @@ def getBasicSKUData(sku, pid, headers, catData):
         except Exception as error:
             print(error)
             print("Reintentando el sku" + str(sku) + ", reintento " + str(cantidad_reintentos))
-            cantidad_reintentos = cantidad_reintentos + 1
             time.sleep(30)
-            reintentar = cantidad_reintentos <= 4
+            reintentar = cantidad_reintentos < 3
+            cantidad_reintentos = cantidad_reintentos + 1
         return {
             'ConError': True
         }

@@ -149,8 +149,9 @@ def process_product_sku(SkuProductList, RequestHeaders, DisabledSkus):
                             connection.rollback()
             except:
                 print("Error insertando informacion en el thread " + str(os.getpid()))
-                time.sleep(60)
+                time.sleep(30)
                 reintentar = cantidad_reintentos < 3
+                cantidad_reintentos += 1
             finally:
                 if connection:
                     cursor.close()
@@ -196,22 +197,37 @@ if __name__ == '__main__':
         aws_secret_access_key=os.environ.get('AWS_SECRET'),
         region_name='us-east-1'
     )
-    client = cemaco_session.client('dynamodb')
-    response = client.scan(
-        TableName = os.environ.get('DYNAMO_TABLE'),
-        FilterExpression = '#status = :status',
-        ProjectionExpression = "Sku",
-        ExpressionAttributeValues = {
+    client = cemaco_session.resource('dynamodb')
+    table = client.Table(os.environ.get('DYNAMO_TABLE'))
+
+    scan_kwargs = {
+        "FilterExpression": '#status = :status AND #valido = :valido',
+        "ProjectionExpression": "Sku",
+        "ExpressionAttributeValues": {
             ':status': {
                 'S': 'DES'
+            },
+            ':valido': {
+                'S': 'Si'
             }
         },
-        ExpressionAttributeNames = {
-            '#status': 'Accion'
+        "ExpressionAttributeNames": {
+            '#status': 'Accion',
+            '#valido': 'Valido'
         }
-    )
-    for item in response['Items']:
-        disabled_skus.append(item['Sku']['N'])
+    }
+    done = False
+    start_key = None
+    while not done:
+        if start_key:
+            scan_kwargs['ExclusiveStartKey'] = start_key
+        response = table.scan(**scan_kwargs)
+        temp_disabled_skus = response.get('Items')
+        for item in temp_disabled_skus:
+            disabled_skus.append(item['Sku'])
+        start_key = response.get('LastEvaluatedKey', None)
+        done = start_key is None
+    print(len(temp_disabled_skus))
 
     #### Empieza script de categorias 
 
@@ -299,7 +315,7 @@ if __name__ == '__main__':
             })
             continuar = True
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=90) as executor:
         future_product_sku = {
             executor.submit(
                 getProductsSkus, item['Inferior'], item['Superior']
@@ -314,9 +330,9 @@ if __name__ == '__main__':
     print("Existen " + str(len(array_sku)) + " SKUs")
     print("Existen " + str(len(disabled_skus)) + " deshabilitados")
 
-    chunks = [array_sku[x : x + int(len(array_sku) / 100)] for x in range(0, len(array_sku), int(len(array_sku) / 100))]
+    chunks = [array_sku[x : x + int(len(array_sku) / 150)] for x in range(0, len(array_sku), int(len(array_sku) / 150))]
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(chunks)) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=75) as executor:
         future_product_sku = {
             executor.submit(
                 process_product_sku, item, headers, disabled_skus

@@ -6,6 +6,7 @@ import psycopg2
 import threading
 import os
 import time
+from datetime import datetime
 
 """
 Llena la tabla SKU
@@ -154,7 +155,7 @@ def getBasicSKUData(sku, pid, headers, catData):
             print(error)
             print("Reintentando el sku" + str(sku) + ", reintento " + str(cantidad_reintentos))
             cantidad_reintentos = cantidad_reintentos + 1
-            time.sleep(60)
+            time.sleep(30)
             reintentar = cantidad_reintentos <= 4
         return {
             'ConError': True

@@ -42,7 +42,8 @@ def getBasicSKUData(sku, pid, headers, catData):
         3047, # Tentrega4 
         3048, # Tproducto 
         303, # Flags 
-        304 # Flags Check
+        304, # Flags Check
+        381 # Temporada
     ]
     cantidad_reintentos = 0
     return_data = {}

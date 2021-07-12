@@ -64,7 +64,6 @@ def getBasicSKUData(sku, pid, headers, catData):
                 product_url_request = requests.get(
                     url=product_url
                 )
-                if product_url_request.status_code >= 500: raise Exception("Error")
                 return_data['Url'] = {
                     'ProductUrl': product_url,
                     'Sku': sku,

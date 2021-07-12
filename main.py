@@ -307,8 +307,8 @@ if __name__ == '__main__':
     while continuar:
         continuar = False
         if (from_val <= total_prod):
-            from_val = to_val + 1
-            to_val = to_val + 50
+            from_val = to_val
+            to_val = to_val + 49
             request_limits.append({
                 'Inferior': from_val,
                 'Superior': to_val
@@ -325,6 +325,9 @@ if __name__ == '__main__':
             if len(future.result()) > 0:
                 for listado_item in future.result():
                     array_sku.append(listado_item)
+
+    array_sku_temp = { each['SKU'] : each for each in array_sku } .values()
+    array_sku = array_sku_temp
 
     print('Procesando los SKUs')
     print("Existen " + str(len(array_sku)) + " SKUs")

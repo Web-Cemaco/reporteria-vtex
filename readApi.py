@@ -71,7 +71,11 @@ def getBasicSKUData(sku, pid, headers, catData):
                     'ProductId': pid,
                     'StatusCode': product_url_request.status_code
                 }
-            else: raise Exception("Error")
+            elif product_request.status_code >= 500: 
+                cantidad_reintentos = 4
+                raise Exception("Error")
+            else:
+                raise Exception("Error")
 
             #Obtener precios del SKU
             price_request = requests.get(
@@ -89,7 +93,11 @@ def getBasicSKUData(sku, pid, headers, catData):
                 inventory_json = inventory_request.json()
                 for item in inventory_json["balance"]:
                     total_inventory += item["totalQuantity"]
-            else: raise Exception("Error")
+            elif inventory_request.status_code >= 500: 
+                cantidad_reintentos = 4
+                raise Exception("Error")
+            else:
+                raise Exception("Error")
 
             #Obtener informacion del sku e imagenes
             sku_request = "https://cemacogt.vtexcommercestable.com.br/api/catalog_system/pvt/sku/stockkeepingunitbyid/" + str(sku)
@@ -128,7 +136,11 @@ def getBasicSKUData(sku, pid, headers, catData):
                         "Value": item["FieldValues"][0].replace("'", "''"),
                         "ValueId": item["FieldValueIds"][0]
                     })
-            else: raise Exception("Error")
+            elif sku_full_response.status_code >= 500: 
+                cantidad_reintentos = 4
+                raise Exception("Error")
+            else:
+                raise Exception("Error")
 
             return_data['SkuAttributes'] = sku_values_insert
             return_data['ProductValues'] = product_values_insert

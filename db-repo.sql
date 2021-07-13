@@ -60,3 +60,7 @@ CREATE TABLE IF NOT EXISTS sku(
 	disabled boolean,
 	PRIMARY KEY(sku, product_id)
 );
+
+CREATE TABLE IF NOT EXISTS skus_error(
+	sku INT NOT NULL PRIMARY KEY
+)

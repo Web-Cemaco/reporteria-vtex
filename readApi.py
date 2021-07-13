@@ -170,5 +170,6 @@ def getBasicSKUData(sku, pid, headers, catData):
             reintentar = cantidad_reintentos < 3
             cantidad_reintentos = cantidad_reintentos + 1
         return {
-            'ConError': True
+            'ConError': True,
+            'Sku': sku
         }

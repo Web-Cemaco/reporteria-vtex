@@ -204,12 +204,8 @@ if __name__ == '__main__':
         "FilterExpression": '#status = :status AND #valido = :valido',
         "ProjectionExpression": "Sku",
         "ExpressionAttributeValues": {
-            ':status': {
-                'S': 'DES'
-            },
-            ':valido': {
-                'S': 'Si'
-            }
+            ':status': 'DES',
+            ':valido': 'Si'
         },
         "ExpressionAttributeNames": {
             '#status': 'Accion',
@@ -228,6 +224,7 @@ if __name__ == '__main__':
         start_key = response.get('LastEvaluatedKey', None)
         done = start_key is None
     print(len(temp_disabled_skus))
+    print("Existen " + str(len(disabled_skus)) + " deshabilitados")
 
     #### Empieza script de categorias 
 
@@ -237,8 +234,8 @@ if __name__ == '__main__':
         'X-VTEX-API-AppToken': os.environ.get('VTEX_APP_TOKEN')
     }
     lock_productos = threading.Lock()
-    from_val = 1
-    to_val = 50
+    from_val = 0
+    to_val = 1
     total_prod = 100000000000
     # Obtiene la cantidad de productos
     total_request = requests.get(
@@ -307,8 +304,8 @@ if __name__ == '__main__':
     while continuar:
         continuar = False
         if (from_val <= total_prod):
-            from_val = to_val
-            to_val = to_val + 49
+            from_val = to_val + 1
+            to_val = to_val + 50
             request_limits.append({
                 'Inferior': from_val,
                 'Superior': to_val
@@ -326,12 +323,8 @@ if __name__ == '__main__':
                 for listado_item in future.result():
                     array_sku.append(listado_item)
 
-    array_sku_temp = { each['SKU'] : each for each in array_sku } .values()
-    array_sku = array_sku_temp
-
     print('Procesando los SKUs')
     print("Existen " + str(len(array_sku)) + " SKUs")
-    print("Existen " + str(len(disabled_skus)) + " deshabilitados")
 
     chunks = [array_sku[x : x + int(len(array_sku) / 100)] for x in range(0, len(array_sku), int(len(array_sku) / 100))]
 

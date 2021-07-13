@@ -167,9 +167,9 @@ def getBasicSKUData(sku, pid, headers, catData):
             print(error)
             print("Reintentando el sku" + str(sku) + ", reintento " + str(cantidad_reintentos))
             time.sleep(30)
-            reintentar = cantidad_reintentos < 3
+            reintentar = cantidad_reintentos <= 3
             cantidad_reintentos = cantidad_reintentos + 1
-        return {
-            'ConError': True,
-            'Sku': sku
-        }
+    return {
+        'ConError': True,
+        'Sku': sku
+    }

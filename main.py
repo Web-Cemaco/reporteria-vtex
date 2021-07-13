@@ -124,31 +124,27 @@ def process_product_sku(SkuProductList, RequestHeaders, DisabledSkus):
                             actual_sku_info = sku['SkuInfo']
                             sku_query = 'INSERT INTO sku(sku, product_id, sku_name, category_id, department_id, brand_id, is_active, has_price, inventory, disabled) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
                             cursor.execute(sku_query, (actual_sku_info['Sku'], actual_sku_info['ProductId'], actual_sku_info['SkuName'], actual_sku_info['CategoryId'], actual_sku_info['DepartmentId'], actual_sku_info['BrandId'], actual_sku_info['IsActive'], actual_sku_info['HasPrice'], actual_sku_info['Inventory'], actual_sku_info['Disabled']))
-                            connection.commit()
 
                             # Guarda la informacion del Link
                             actual_sku_url = sku['Url']
                             sku_url_query = 'INSERT INTO productUrlStatus(product_id, sku, url, statusCode) VALUES (%s, %s, %s, %s)'
                             cursor.execute(sku_url_query, (actual_sku_url['ProductId'], actual_sku_url['Sku'], actual_sku_url['ProductUrl'], actual_sku_url['StatusCode']))
-                            connection.commit()
 
                             # Guarda las imagenes del SKU
                             for imagen in sku['SkuImages']:
                                 imagen_query = 'INSERT INTO skuImage(sku, file_id, image_url) VALUES (%s, %s, %s)'
                                 cursor.execute(imagen_query, (actual_sku_info['Sku'], imagen['FileId'], imagen['ImageUrl']))
-                                connection.commit()
 
                             # Guarda las especificaciones del producto
                             for especificacion in sku['ProductValues']:
                                 specification_query = 'INSERT INTO productAttribute(product_id, field_id, sku, field_name, field_value) VALUES (%s, %s, %s, %s, %s)'
                                 cursor.execute(specification_query, (actual_sku_info['ProductId'], especificacion['FieldId'], actual_sku_info['Sku'], especificacion['FieldName'], especificacion['Value']))
-                                connection.commit()
 
                             # Guarda las especificaciones de un SKU
                             for especificacion in sku['SkuAttributes']:
                                 specification_query = 'INSERT INTO skuAttributes(sku, field_id, field_name, value_id, value_text) VALUES (%s, %s, %s, %s, %s)'
                                 cursor.execute(specification_query, (actual_sku_info['Sku'], especificacion['FieldId'], especificacion['FieldName'], especificacion['ValueId'], especificacion['Value']))
-                                connection.commit()
+                            connection.commit()
                         except (Exception, psycopg2.Error) as error:
                             connection.rollback()
                     else:

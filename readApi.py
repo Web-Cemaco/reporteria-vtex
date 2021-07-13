@@ -55,7 +55,7 @@ def getBasicSKUData(sku, pid, headers, catData):
                 url='https://cemacogt.vtexcommercestable.com.br/api/catalog/pvt/product/' + str(pid),
                 headers=headers
             )
-            if product_request.status_code >= 200 and product_request.status_code < 300:
+            if product_request.ok:
                 product_json = product_request.json()
                 category_id = str(product_json["CategoryId"])
                 department_id = str(product_json["DepartmentId"])
@@ -70,31 +70,24 @@ def getBasicSKUData(sku, pid, headers, catData):
                     'ProductId': pid,
                     'StatusCode': product_url_request.status_code
                 }
-            elif product_request.status_code >= 500: 
-                cantidad_reintentos = 4
-                raise Exception("Error")
-            else:
-                raise Exception("Error")
+            else: raise Exception("Error")
 
             #Obtener precios del SKU
             price_request = requests.get(
                 url= 'https://api.vtex.com/cemacogt/pricing/prices/' + str(sku),
                 headers=headers
             )
-            has_price = price_request.status_code >= 200
+            has_price = price_request.ok
             
             #Obtener inventario de cada sku
             inventory_request = requests.get(
                 url='https://cemacogt.vtexcommercestable.com.br/api/logistics/pvt/inventory/skus/' + str(sku),
                 headers=headers
             )
-            if inventory_request.status_code >= 200 and inventory_request.status_code < 300:
+            if inventory_request.ok:
                 inventory_json = inventory_request.json()
                 for item in inventory_json["balance"]:
                     total_inventory += item["totalQuantity"]
-            elif inventory_request.status_code >= 500: 
-                cantidad_reintentos = 4
-                raise Exception("Error")
             else:
                 raise Exception("Error")
 
@@ -104,7 +97,7 @@ def getBasicSKUData(sku, pid, headers, catData):
                 url = sku_request,
                 headers = headers
             )
-            if sku_full_response.status_code >= 200 and sku_full_response.status_code < 300:
+            if sku_full_response.ok:
                 sku_json= sku_full_response.json()
                 sku_name_aux = sku_json["ProductName"]
                 sku_name = sku_name_aux.replace("'", "''")
@@ -135,9 +128,6 @@ def getBasicSKUData(sku, pid, headers, catData):
                         "Value": item["FieldValues"][0].replace("'", "''"),
                         "ValueId": item["FieldValueIds"][0]
                     })
-            elif sku_full_response.status_code >= 500: 
-                cantidad_reintentos = 4
-                raise Exception("Error")
             else:
                 raise Exception("Error")
 
@@ -167,7 +157,7 @@ def getBasicSKUData(sku, pid, headers, catData):
             print(error)
             print("Reintentando el sku" + str(sku) + ", reintento " + str(cantidad_reintentos))
             time.sleep(30)
-            reintentar = cantidad_reintentos <= 3
+            reintentar = cantidad_reintentos <= 2
             cantidad_reintentos = cantidad_reintentos + 1
     return {
         'ConError': True,

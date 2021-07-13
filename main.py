@@ -147,9 +147,6 @@ def process_product_sku(SkuProductList, RequestHeaders, DisabledSkus):
                             connection.commit()
                         except (Exception, psycopg2.Error) as error:
                             connection.rollback()
-                    else:
-                        cursor.execute("INSERT INTO skus_error (sku) VALUES (%s)", (sku['Sku']))
-                        connection.commit()
             except:
                 print("Error insertando informacion en el thread " + str(os.getpid()))
                 time.sleep(30)
@@ -332,7 +329,7 @@ if __name__ == '__main__':
 
     chunks = [array_sku[x : x + int(len(array_sku) / 100)] for x in range(0, len(array_sku), int(len(array_sku) / 100))]
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(chunks)) as executor:
         future_product_sku = {
             executor.submit(
                 process_product_sku, item, headers, disabled_skus

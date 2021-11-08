@@ -108,6 +108,7 @@ def process_product_sku(SkuProductList, RequestHeaders, DisabledSkus):
         reintentar = True
         cantidad_reintentos = 0
         while reintentar:
+            reintentar = False
             try:
                 connection = psycopg2.connect(
                     user=os.environ.get('POSTGRES_USER'), 
@@ -122,8 +123,8 @@ def process_product_sku(SkuProductList, RequestHeaders, DisabledSkus):
                         try:
                             # Guarda la informacion del SKU
                             actual_sku_info = sku['SkuInfo']
-                            sku_query = 'INSERT INTO sku(sku, product_id, sku_name, category_id, department_id, brand_id, is_active, has_price, inventory, disabled) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-                            cursor.execute(sku_query, (actual_sku_info['Sku'], actual_sku_info['ProductId'], actual_sku_info['SkuName'], actual_sku_info['CategoryId'], actual_sku_info['DepartmentId'], actual_sku_info['BrandId'], actual_sku_info['IsActive'], actual_sku_info['HasPrice'], actual_sku_info['Inventory'], actual_sku_info['Disabled']))
+                            sku_query = 'INSERT INTO sku(sku, product_id, sku_name, category_id, department_id, brand_id, is_active, has_price, inventory, disabled, product_name, show_without_stock, modelo, price, tiene_service_empaque, tiene_attachment_empaque) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                            cursor.execute(sku_query, (actual_sku_info['Sku'], actual_sku_info['ProductId'], actual_sku_info['SkuName'], actual_sku_info['CategoryId'], actual_sku_info['DepartmentId'], actual_sku_info['BrandId'], actual_sku_info['IsActive'], actual_sku_info['HasPrice'], actual_sku_info['Inventory'], actual_sku_info['Disabled'], actual_sku_info['ProductName'], actual_sku_info['ShowWithoutStock'], actual_sku_info['ManufacturerCode'], actual_sku_info['Price'], actual_sku_info['HasService'], actual_sku_info['HasAttachment']))
 
                             # Guarda la informacion del Link
                             actual_sku_url = sku['Url']
@@ -131,21 +132,37 @@ def process_product_sku(SkuProductList, RequestHeaders, DisabledSkus):
                             cursor.execute(sku_url_query, (actual_sku_url['ProductId'], actual_sku_url['Sku'], actual_sku_url['ProductUrl'], actual_sku_url['StatusCode']))
 
                             # Guarda las imagenes del SKU
+                            cantidad_imagenes = 0
+                            imagen_query = 'INSERT INTO skuImage(sku, file_id, image_url, is_main, nombre, label) VALUES (%s, %s, %s, %s, %s, %s)'
+                            imagenes_values_tuples = []
                             for imagen in sku['SkuImages']:
-                                imagen_query = 'INSERT INTO skuImage(sku, file_id, image_url) VALUES (%s, %s, %s)'
-                                cursor.execute(imagen_query, (actual_sku_info['Sku'], imagen['FileId'], imagen['ImageUrl']))
+                                imagenes_values_tuples.append((actual_sku_info['Sku'], imagen['FileId'], imagen['ImageUrl'], imagen['IsMain'], imagen['Name'], imagen['Label']))
+                                cantidad_imagenes += 1
+                            if cantidad_imagenes > 0:
+                                cursor.executemany(imagen_query, imagenes_values_tuples)
 
                             # Guarda las especificaciones del producto
+                            cantidad_especificaciones_producto = 0
+                            specification_query = 'INSERT INTO productAttribute(product_id, field_id, sku, field_name, field_value) VALUES (%s, %s, %s, %s, %s)'
+                            especificaciones_producto_values_tuples = []
                             for especificacion in sku['ProductValues']:
-                                specification_query = 'INSERT INTO productAttribute(product_id, field_id, sku, field_name, field_value) VALUES (%s, %s, %s, %s, %s)'
-                                cursor.execute(specification_query, (actual_sku_info['ProductId'], especificacion['FieldId'], actual_sku_info['Sku'], especificacion['FieldName'], especificacion['Value']))
+                                especificaciones_producto_values_tuples.append((actual_sku_info['ProductId'], especificacion['FieldId'], actual_sku_info['Sku'], especificacion['FieldName'], especificacion['Value']))
+                                cantidad_especificaciones_producto += 1
+                            if cantidad_especificaciones_producto > 0:
+                                cursor.executemany(specification_query, especificaciones_producto_values_tuples)
 
                             # Guarda las especificaciones de un SKU
+                            cantidad_especificaciones_sku = 0
+                            specification_query = 'INSERT INTO skuAttributes(sku, field_id, field_name, value_id, value_text) VALUES (%s, %s, %s, %s, %s)'
+                            especificaciones_sku_values_tuples = []
                             for especificacion in sku['SkuAttributes']:
-                                specification_query = 'INSERT INTO skuAttributes(sku, field_id, field_name, value_id, value_text) VALUES (%s, %s, %s, %s, %s)'
-                                cursor.execute(specification_query, (actual_sku_info['Sku'], especificacion['FieldId'], especificacion['FieldName'], especificacion['ValueId'], especificacion['Value']))
+                                especificaciones_sku_values_tuples.append((actual_sku_info['Sku'], especificacion['FieldId'], especificacion['FieldName'], especificacion['ValueId'], especificacion['Value']))
+                                cantidad_especificaciones_sku += 1
+                            if cantidad_especificaciones_sku > 0:
+                                cursor.executemany(specification_query, especificaciones_sku_values_tuples)
                             connection.commit()
                         except (Exception, psycopg2.Error) as error:
+                            print(error)
                             connection.rollback()
             except:
                 print("Error insertando informacion en el thread " + str(os.getpid()))
@@ -192,40 +209,20 @@ if __name__ == '__main__':
             connection.close()
     print('Obteniendo los SKUs deshabilitados')
     disabled_skus = []
-    # Leer el excel de deshabilitados 
-    cemaco_session = boto3.Session(
-        aws_access_key_id=os.environ.get('AWS_ACCESS'),
-        aws_secret_access_key=os.environ.get('AWS_SECRET'),
-        region_name='us-east-1'
-    )
-    client = cemaco_session.resource('dynamodb')
-    table = client.Table(os.environ.get('DYNAMO_TABLE'))
-
-    scan_kwargs = {
-        "FilterExpression": '#status = :status AND #valido = :valido',
-        "ProjectionExpression": "Sku",
-        "ExpressionAttributeValues": {
-            ':status': 'DES',
-            ':valido': 'Si'
-        },
-        "ExpressionAttributeNames": {
-            '#status': 'Accion',
-            '#valido': 'Valido'
-        }
-    }
-    done = False
-    start_key = None
-    while not done:
-        if start_key:
-            scan_kwargs['ExclusiveStartKey'] = start_key
-        response = table.scan(**scan_kwargs)
-        temp_disabled_skus = response.get('Items')
-        for item in temp_disabled_skus:
-            disabled_skus.append(item['Sku'])
-        start_key = response.get('LastEvaluatedKey', None)
-        done = start_key is None
-    print(len(temp_disabled_skus))
-    print("Existen " + str(len(disabled_skus)) + " deshabilitados")
+    url_deshabilitados = "https://pj3giwgl4g.execute-api.us-east-1.amazonaws.com/prod/api/v1/reporte/status?CantidadItems=1000&Accion=DES"
+    continuar = True
+    last_key = ""
+    while continuar:
+        peticion_deshabilitados = requests.get(
+            url=url_deshabilitados + '' if last_key == '' else f'&start_token={last_key}'
+        )
+        if peticion_deshabilitados.ok:
+            peticion_deshabilitados_json = peticion_deshabilitados.json()
+            continuar = peticion_deshabilitados_json["is_last"]
+            if peticion_deshabilitados_json["is_last"]:
+                last_key = peticion_deshabilitados_json["start_token"]
+            for item in peticion_deshabilitados_json["Status"]:
+                disabled_skus.append(item["Sku"])
 
     #### Empieza script de categorias 
 
@@ -299,7 +296,42 @@ if __name__ == '__main__':
             cursor.close()
             connection.close()
 
-
+    print('Obteniendo las marcas')
+    url_marcas = "https://cemacogt.vtexcommercestable.com.br/api/catalog_system/pvt/brand/list"
+    marcas_request = requests.get(
+        url=url_marcas,
+        headers=headers
+    )
+    if marcas_request.ok:
+        marcas_json = marcas_request.json()
+        try:
+            connection = psycopg2.connect(
+                user=os.environ.get('POSTGRES_USER'), 
+                password=os.environ.get('POSTGRES_PASS'), 
+                host=os.environ.get('POSTGRES_HOST'), 
+                port=os.environ.get('POSTGRES_PORT'), 
+                database=os.environ.get('POSTGRES_DB')
+            )
+            cursor = connection.cursor()
+            
+            insert_brand_query = 'INSERT INTO marcas (id, nombre) VALUES (%s, %s)'
+            cantidad_marcas = 0
+            marcas_query_tuple = []
+            for marca in marcas_json:
+                marcas_query_tuple.append((marca["id"], marca["name"]))
+                cantidad_marcas += 1
+            if cantidad_marcas > 0:
+                cursor.executemany(insert_brand_query, marcas_query_tuple)
+            connection.commit()
+        except Exception as error:
+            print(error)
+            print('Hubo un error obteniendo las marcas')
+        finally:
+            # closing database connection.
+            if connection:
+                cursor.close()
+                connection.close()
+               
     request_limits = []
     print('Obteniendo productos y skus')
     while continuar:
@@ -325,19 +357,20 @@ if __name__ == '__main__':
                     array_sku.append(listado_item)
 
     print('Procesando los SKUs')
-    print("Existen " + str(len(array_sku)) + " SKUs")
 
     chunks = [array_sku[x : x + int(len(array_sku) / 100)] for x in range(0, len(array_sku), int(len(array_sku) / 100))]
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(chunks)) as executor:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=100) as executor:
         future_product_sku = {
             executor.submit(
                 process_product_sku, item, headers, disabled_skus
             ) : item for item in chunks
         }
-
-    iid = ec2_metadata.instance_id
-    ec2 = cemaco_session.client('ec2')
-    ec2.terminate_instances(InstanceIds=[iid])
+    try:
+        iid = ec2_metadata.instance_id
+        ec2 = cemaco_session.client('ec2')
+        ec2.terminate_instances(InstanceIds=[iid])
+    except:
+        print("Aqui hubo error")
 
     terminate_process.join()

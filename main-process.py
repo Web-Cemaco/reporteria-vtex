@@ -152,6 +152,7 @@ if __name__ == '__main__':
         cursor.execute("DELETE FROM sku")
         cursor.execute("DELETE FROM skuattributes")
         cursor.execute("DELETE FROM skuimage")
+        cursor.execute("DELETE FROM marcas")
 
         connection.commit()
     except (Exception, psycopg2.Error) as error:
@@ -161,32 +162,23 @@ if __name__ == '__main__':
         if connection:
             cursor.close()
             connection.close()
+
     print('Obteniendo los SKUs deshabilitados')
     disabled_skus = []
-    # Leer el excel de deshabilitados 
-    cemaco_session = boto3.Session(
-        aws_access_key_id=os.environ.get('AWS_ACCESS'),
-        aws_secret_access_key=os.environ.get('AWS_SECRET'),
-        region_name='us-east-1'
-    )
-    client = cemaco_session.client('dynamodb')
-    response = client.scan(
-        TableName = os.environ.get('DYNAMO_TABLE'),
-        FilterExpression = '#status = :status',
-        ProjectionExpression = "Sku",
-        ExpressionAttributeValues = {
-            ':status': {
-                'S': 'DES'
-            }
-        },
-        ExpressionAttributeNames = {
-            '#status': 'Accion'
-        }
-    )
-    for item in response['Items']:
-        disabled_skus.append(item['Sku']['N'])
-
-    #### Empieza script de categorias 
+    url_deshabilitados = "https://pj3giwgl4g.execute-api.us-east-1.amazonaws.com/prod/api/v1/reporte/status?CantidadItems=1000&Accion=DES"
+    continuar = True
+    last_key = ""
+    while continuar:
+        peticion_deshabilitados = requests.get(
+            url=url_deshabilitados + '' if last_key == '' else f'&start_token={last_key}'
+        )
+        if peticion_deshabilitados.ok:
+            peticion_deshabilitados_json = peticion_deshabilitados.json()
+            continuar = peticion_deshabilitados_json["is_last"]
+            if peticion_deshabilitados_json["is_last"]:
+                last_key = peticion_deshabilitados_json["start_token"]
+            for item in peticion_deshabilitados_json["Status"]:
+                disabled_skus.append(item["Sku"])
 
     # Headers para las peticiones a la API de VTEX
     headers = {
@@ -283,15 +275,16 @@ if __name__ == '__main__':
                 for listado_item in future.result():
                     array_sku.append(listado_item)
 
-    print('Procesando los SKUs')
-    print("Existen " + str(len(array_sku)) + " SKUs")
-    print("Existen " + str(len(disabled_skus)) + " deshabilitados")
-
     chunks = [array_sku[x : x + int(len(array_sku) / 100)] for x in range(0, len(array_sku), int(len(array_sku) / 100))]
 
     with multiprocessing.Pool(processes=len(chunks)) as p:
         p.starmap(process_product_sku, zip(chunks, repeat(headers), repeat(disabled_skus)))
 
+    cemaco_session = boto3.Session(
+        aws_access_key_id=os.environ.get('AWS_ACCESS'),
+        aws_secret_access_key=os.environ.get('AWS_SECRET'),
+        region_name='us-east-1'
+    )
     iid = ec2_metadata.instance_id
     ec2 = cemaco_session.client('ec2')
     ec2.terminate_instances(InstanceIds=[iid])

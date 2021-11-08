@@ -4,6 +4,8 @@ DROP TABLE IF EXISTS productUrlStatus CASCADE;
 DROP TABLE IF EXISTS sku CASCADE;
 DROP TABLE IF EXISTS skuAttributes CASCADE;
 DROP TABLE IF EXISTS skuImage CASCADE;
+DROP TABLE IF EXISTS marcas CASCADE;
+DROP TABLE IF EXISTS skus_error CASCADE;
 
 CREATE TABLE IF NOT EXISTS productUrlStatus(
 	product_id int NOT NULL,
@@ -35,6 +37,9 @@ CREATE TABLE IF NOT EXISTS skuImage(
 	sku int NOT NULL, 
 	file_id int NOT NULL,
 	image_url text NOT NULL,
+	is_main boolean,
+	nombre varchar(500),
+	label varchar(500),
 	PRIMARY KEY(sku, file_id)
 );
 
@@ -50,17 +55,28 @@ CREATE TABLE IF NOT EXISTS categories(
 CREATE TABLE IF NOT EXISTS sku(
 	sku int NOT NULL,
 	product_id int NOT NULL,
+	product_name varchar(500),
 	sku_name varchar(500),
 	category_id int NOT NULL,
 	department_id int NOT NULL,
 	brand_id int NOT NULL,
+	show_without_stock boolean,
+	modelo varchar(500),
 	is_active varchar(100), 
 	has_price boolean,
+	price decimal,
+	tiene_service_empaque boolean,
+	tiene_attachment_empaque boolean,
 	inventory int,
 	disabled boolean,
 	PRIMARY KEY(sku, product_id)
 );
 
+CREATE TABLE IF NOT EXISTS marcas(
+	id int not null,
+	nombre varchar(500)
+);
+
 CREATE TABLE IF NOT EXISTS skus_error(
 	sku INT NOT NULL PRIMARY KEY
-)
+);

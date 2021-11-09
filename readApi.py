@@ -28,7 +28,7 @@ def getBasicSKUData(sku, pid, headers, catData):
     show_without_stock = False
     has_service = False
     has_attachment = False
-    price = ""
+    price = "0"
     modelo = ""
     sku_images = []
     is_disabled = False

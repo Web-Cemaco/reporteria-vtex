@@ -112,7 +112,7 @@ def getBasicSKUData(sku, pid, headers, catData):
             )
             if sku_full_response.ok:
                 sku_json= sku_full_response.json()
-                sku_name_aux = sku_json["ProductName"]
+                sku_name_aux = sku_json["SkuName"]
                 sku_name = sku_name_aux.replace("'", "''")
                 modelo = sku_json["ManufacturerCode"]
                 is_active = "Activo" if sku_json["IsActive"] == True else "No Activo"

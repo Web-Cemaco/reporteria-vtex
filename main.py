@@ -198,6 +198,7 @@ if __name__ == '__main__':
         cursor.execute("DELETE FROM skuattributes")
         cursor.execute("DELETE FROM skuimage")
         cursor.execute("DELETE FROM skus_error")
+        cursor.execute("DELETE FROM marcas")
 
         connection.commit()
     except (Exception, psycopg2.Error) as error:

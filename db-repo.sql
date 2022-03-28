@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS sku(
 	tiene_service_empaque boolean,
 	tiene_attachment_empaque boolean,
 	inventory int,
+	modal varchar(100),
 	disabled boolean,
 	PRIMARY KEY(sku, product_id)
 );

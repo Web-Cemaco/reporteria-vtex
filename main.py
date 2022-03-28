@@ -123,8 +123,8 @@ def process_product_sku(SkuProductList, RequestHeaders, DisabledSkus):
                         try:
                             # Guarda la informacion del SKU
                             actual_sku_info = sku['SkuInfo']
-                            sku_query = 'INSERT INTO sku(sku, product_id, sku_name, category_id, department_id, brand_id, is_active, has_price, inventory, disabled, product_name, show_without_stock, modelo, price, tiene_service_empaque, tiene_attachment_empaque) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
-                            cursor.execute(sku_query, (actual_sku_info['Sku'], actual_sku_info['ProductId'], actual_sku_info['SkuName'], actual_sku_info['CategoryId'], actual_sku_info['DepartmentId'], actual_sku_info['BrandId'], actual_sku_info['IsActive'], actual_sku_info['HasPrice'], actual_sku_info['Inventory'], actual_sku_info['Disabled'], actual_sku_info['ProductName'], actual_sku_info['ShowWithoutStock'], actual_sku_info['ManufacturerCode'], actual_sku_info['Price'], actual_sku_info['HasService'], actual_sku_info['HasAttachment']))
+                            sku_query = 'INSERT INTO sku(sku, product_id, sku_name, category_id, department_id, brand_id, is_active, has_price, inventory, disabled, product_name, show_without_stock, modelo, price, tiene_service_empaque, tiene_attachment_empaque, modal) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+                            cursor.execute(sku_query, (actual_sku_info['Sku'], actual_sku_info['ProductId'], actual_sku_info['SkuName'], actual_sku_info['CategoryId'], actual_sku_info['DepartmentId'], actual_sku_info['BrandId'], actual_sku_info['IsActive'], actual_sku_info['HasPrice'], actual_sku_info['Inventory'], actual_sku_info['Disabled'], actual_sku_info['ProductName'], actual_sku_info['ShowWithoutStock'], actual_sku_info['ManufacturerCode'], actual_sku_info['Price'], actual_sku_info['HasService'], actual_sku_info['HasAttachment'], actual_sku_info["Modal"]))
 
                             # Guarda la informacion del Link
                             actual_sku_url = sku['Url']

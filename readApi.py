@@ -116,7 +116,7 @@ def getBasicSKUData(sku, pid, headers, catData):
                 sku_name_aux = sku_json["SkuName"]
                 sku_name = sku_name_aux.replace("'", "''")
                 modelo = sku_json["ManufacturerCode"]
-                modal = sku_json["Modal"]
+                modal = sku_json["ModalType"] if "ModalType" in sku_json else ""
                 is_active = "Activo" if sku_json["IsActive"] == True else "No Activo"
                 # Aqui obtener los services y Attachments
                 if "Services" in sku_json:
@@ -183,7 +183,7 @@ def getBasicSKUData(sku, pid, headers, catData):
                 'CategoryId': category_id,
                 'DepartmentId': department_id,
                 'BrandId': brand_id,
-                'Modal': modal,
+                'Modal': modal if not modal is None else "",
                 'IsActive': is_active,
                 'HasPrice': has_price,
                 'Price': price,

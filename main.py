@@ -332,7 +332,6 @@ if __name__ == '__main__':
             if connection:
                 cursor.close()
                 connection.close()
-               
     request_limits = []
     print('Obteniendo productos y skus')
     while continuar:

@@ -130,4 +130,4 @@ dmypy.json
 
 Pipfile.lock
 categories.csv
-.http
+*.http

@@ -101,7 +101,7 @@ def getBasicSKUData(sku, pid, headers, catData):
             if inventory_request.ok:
                 inventory_json = inventory_request.json()
                 for item in inventory_json["balance"]:
-                    total_inventory += item["totalQuantity"]
+                    total_inventory += (item["totalQuantity"] - item["reservedQuantity"])
             else:
                 raise Exception("Error")
 
